@@ -14,6 +14,7 @@ matrix:
       compiler: clang
       env:
         - CFLAGS="-O3 -mmacosx-version-min=10.7"
+    - os: windows
 
 addons:
   apt:
@@ -66,6 +67,24 @@ before_install:
     # Install LuaRocks packages
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       luarocks install --local ldoc
+    fi
+
+  - |
+    # https://docs.travis-ci.com/user/reference/windows/#how-do-i-use-msys2
+    if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+      [[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
+      choco uninstall -y mingw
+      choco upgrade --no-progress -y msys2
+      export msys2='cmd //C RefreshEnv.cmd '
+      export msys2+='& set MSYS=winsymlinks:nativestrict '
+      export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
+      export msys2+=" -msys2 -c "\"\$@"\" --"
+      $msys2 pacman --sync --noconfirm --needed \
+          mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_mixer \
+          mingw-w64-x86_64-libxml2 mingw-w64-x86_64-libpng mingw-w64-x86_64-openal \
+          mingw-w64-x86_64-libvorbis mingw-w64-x86_64-binutils mingw-w64-x86_64-freetype \
+          mingw-w64-x86_64-libzip autoconf automake-wrapper git pkgconfig make \
+          gettext autopoint intltool
     fi
 
 script:
